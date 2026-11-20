@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="XChat – Private Conversations. No Footprints.">
+<title>XChat</title>
+<style>
+:root{color-scheme:dark;--bg:#000;--fg:#fff;--mut:#8c8c8c;--line:#2a2a2a;--card:#0e0e0e;--card2:#181818;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;min-height:100dvh;display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent}
+html[lang^="fa"] body,html[lang^="fa"] button,html[lang^="fa"] input,html[lang^="fa"] textarea{font-family:"Vazirmatn","Noto Sans Arabic","Noto Naskh Arabic","Segoe UI",Tahoma,sans-serif;line-height:1.8}
+button,input,textarea{font:inherit;color:inherit}
+#bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;padding-top:max(14px,env(safe-area-inset-top))}
+body[data-view=chat] #bar{display:none}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700;letter-spacing:.2px}
+.lg{width:30px;height:30px;flex:none}
+.lg.big{width:84px;height:84px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--card)}
+.seg button{background:none;border:0;border-radius:999px;padding:5px 14px;cursor:pointer;color:var(--mut);font-size:14px}
+.seg button[aria-pressed=true]{background:#fff;color:#000;font-weight:600}
+main{flex:1;display:flex;flex-direction:column}
+.view{display:none;flex:1;width:100%;max-width:480px;margin:0 auto;padding:12px 20px 28px;flex-direction:column;gap:18px}
+.view.on{display:flex;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.center{justify-content:center;align-items:center;text-align:center}
+h1{font-size:30px;letter-spacing:-.5px;line-height:1.2}
+h2{font-size:22px;line-height:1.3}
+p.mut,.mut{color:var(--mut)}
+.small{font-size:13px}
+.btn{display:block;width:100%;background:#fff;color:#000;border:0;border-radius:14px;padding:15px 20px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;transition:transform .08s,opacity .15s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:transparent;color:#fff;border:1px solid var(--line)}
+.btn.sm{padding:10px 16px;width:auto;display:inline-block}
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.field{display:flex;gap:8px;width:100%}
+.field input{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;direction:ltr;text-align:start}
+.note{border:1px dashed var(--line);border-radius:12px;padding:10px 12px;color:var(--mut);font-size:13px;text-align:start}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.opt{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.opt b{font-size:28px;line-height:1.1}
+.opt span{color:var(--mut);font-size:13px}
+.opt em{position:absolute;top:-9px;font-style:normal;font-size:11px;background:#fff;color:#000;border-radius:999px;padding:1px 8px;font-weight:600}
+.opt[aria-checked=true]{background:#fff;color:#000;border-color:#fff}
+.opt[aria-checked=true] span{color:#333}
+.stack{display:flex;flex-direction:column;gap:10px;width:100%}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;margin:auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.rows{display:flex;flex-direction:column;gap:8px;text-align:start;width:100%}
+.rows div{display:flex;justify-content:space-between;gap:12px;font-size:14px}
+.rows span:first-child{color:var(--mut)}
+.rows span:last-child{text-align:end}
+.foot{margin-top:auto;text-align:center;color:var(--mut);font-size:12px;padding-top:12px}
+/* chat */
+#v-chat{max-width:760px;padding:0;gap:0;height:100dvh}
+.ch-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+.ch-head .brand b{font-size:16px}
+.timer{display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.timer small{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px}
+.timer output{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;direction:ltr}
+.timer.low output{animation:blink 1s steps(2,start) infinite}
+@keyframes blink{50%{opacity:.35}}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:10px;color:#fff;padding:6px 10px;cursor:pointer;font-size:13px}
+.hd-actions{display:flex;gap:6px;align-items:center}
+#info{border-bottom:1px solid var(--line);padding:12px 16px;background:var(--card);display:flex;flex-direction:column;gap:12px}
+.msgs{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+.hint{margin:auto;color:var(--mut);font-size:14px;text-align:center;max-width:280px}
+.msg{max-width:80%;padding:9px 12px 6px;border-radius:18px;word-break:break-word;overflow-wrap:anywhere}
+.msg .tx{white-space:pre-wrap}
+.msg time{display:block;font-size:11px;opacity:.6;margin-top:2px;text-align:end}
+.msg.mine{align-self:flex-end;background:#fff;color:#000;border-end-end-radius:6px}
+.msg.theirs{align-self:flex-start;background:var(--card2);border:1px solid var(--line);border-end-start-radius:6px}
+.composer{display:flex;gap:8px;align-items:flex-end;padding:10px 12px;padding-bottom:max(10px,env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.composer textarea{flex:1;resize:none;max-height:140px;min-height:44px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:10px 16px;line-height:1.4}
+.send{border:0;background:#fff;color:#000;border-radius:50%;width:44px;height:44px;cursor:pointer;font-size:18px;flex:none}
+[dir=rtl] .send svg{transform:scaleX(-1)}
+#offline{background:#fff;color:#000;text-align:center;font-size:13px;padding:4px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#fff;color:#000;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;z-index:9}
+#toast.on{opacity:1}
+#demoBar{position:fixed;left:6px;bottom:4px;z-index:8;font-size:11px;background:#fff;color:#000;border-radius:999px;padding:1px 10px;opacity:.85;pointer-events:none}
+pre{white-space:pre-wrap;text-align:start;direction:ltr;font-size:13px}
+</style>
+</head>
+<body data-view="loading">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="logo" viewBox="0 0 64 64">
+  <rect x="3" y="3" width="58" height="46" rx="14" fill="#fff"/>
+  <path d="M14 49 14 60 27 49z" fill="#fff"/>
+  <path d="M23 15 41 37M41 15 23 37" stroke="#000" stroke-width="6.5" stroke-linecap="round"/>
+</symbol></svg>
+
+<div id="demoBar" hidden data-i18n="demo_bar"></div>
+<header id="bar">
+  <a class="brand" href="#" aria-label="XChat"><svg class="lg"><use href="#logo"/></svg><b>XChat</b></a>
+  <div class="seg seglang" role="group" aria-label="Language"><button data-lang="en">English</button><button data-lang="fa" lang="fa">دری</button></div>
+</header>
+
+<main>
+  <section id="v-loading" class="view center"><div class="spin" role="status" aria-label="Loading"></div></section>
+
+  <!-- Setup needed (English only, developer-facing) -->
+  <section id="v-setup" class="view center">
+    <svg class="lg big"><use href="#logo"/></svg>
+    <h2>XChat needs a backend</h2>
+    <p class="mut">The Firebase settings at the top of this file's script are empty, so real-time chat cannot work yet. Open <b>guide.html</b> and follow "Backend setup" (about 10 minutes, free plan).</p>
+  </section>
+
+  <!-- Screen 1: Welcome -->
+  <section id="v-welcome" class="view center">
+    <svg class="lg big"><use href="#logo"/></svg>
+    <div><h1>XChat</h1><p class="mut" data-i18n="tagline" style="margin-top:6px"></p></div>
+    <p data-i18n="welcome_desc"></p>
+    <div class="stack">
+      <button class="btn" id="goCreate" data-i18n="create_btn"></button>
+      <button class="btn ghost" id="btnInstall" hidden data-i18n="install"></button>
+    </div>
+    <div class="stack" style="margin-top:6px">
+      <p class="mut small" data-i18n="join_hint"></p>
+      <form class="field" id="joinForm">
+        <input id="joinInput" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-ph="paste_ph">
+        <button class="btn sm" type="submit" data-i18n="join_go"></button>
+      </form>
+    </div>
+    <p class="note" data-i18n="notice_p1"></p>
+    <div class="foot">Founded by WSL – 2026</div>
+  </section>
+
+  <!-- Screen 2: Create + invitation -->
+  <section id="v-create" class="view">
+    <div id="c-pick" class="stack" style="gap:18px">
+      <h2 data-i18n="choose_duration"></h2>
+      <div class="opts" role="radiogroup" id="opts"></div>
+      <p class="mut small" data-i18n="duration_note"></p>
+      <button class="btn" id="btnCreate" data-i18n="create_room"></button>
+      <button class="btn ghost" id="btnBack1" data-i18n="home"></button>
+    </div>
+    <div id="c-invite" class="stack" style="gap:18px" hidden>
+      <h2 data-i18n="invite_title"></h2>
+      <p class="mut" data-i18n="invite_desc"></p>
+      <div class="field"><input id="inviteLink" readonly></div>
+      <button class="btn ghost" id="btnCopy" data-i18n="copy"></button>
+      <a class="btn" id="btnWa" target="_blank" rel="noopener" data-i18n="wa"></a>
+      <div class="card stack" style="align-items:center;text-align:center">
+        <div class="spin" style="margin:0"></div>
+        <p data-i18n="waiting"></p>
+        <p class="mut small" id="inviteMeta"></p>
+      </div>
+      <button class="btn ghost" id="btnCloseRoom" data-i18n="close_room"></button>
+    </div>
+  </section>
+
+  <!-- Screen 3: Join confirmation -->
+  <section id="v-join" class="view center">
+    <svg class="lg big"><use href="#logo"/></svg>
+    <h2 data-i18n="join_title"></h2>
+    <p id="joinDesc"></p>
+    <div class="card rows" id="joinRows"></div>
+    <button class="btn" id="btnJoin" data-i18n="join_conv"></button>
+    <button class="btn ghost" id="btnBack2" data-i18n="home"></button>
+  </section>
+
+  <!-- Screen 4: Chat -->
+  <section id="v-chat" class="view">
+    <div id="offline" hidden data-i18n="offline"></div>
+    <div class="ch-head">
+      <a class="brand" href="#" onclick="return false" aria-label="XChat"><svg class="lg"><use href="#logo"/></svg><b>XChat</b></a>
+      <div class="timer" id="timer"><small data-i18n="time_left"></small><output id="clock" aria-live="off">--:--</output></div>
+      <div class="hd-actions">
+        <button class="iconbtn" id="btnInfo" aria-expanded="false" aria-label="Info">ⓘ</button>
+        <button class="iconbtn" id="btnClose" data-i18n="close_chat"></button>
+      </div>
+    </div>
+    <div id="info" hidden>
+      <div class="rows" id="infoRows"></div>
+      <div class="seg seglang" role="group" aria-label="Language" style="align-self:flex-start"><button data-lang="en">English</button><button data-lang="fa" lang="fa">دری</button></div>
+    </div>
+    <div class="msgs" id="msgs" aria-live="polite"><p class="hint" id="chatHint" data-i18n="chat_hint"></p></div>
+    <div class="composer">
+      <textarea id="msgInput" rows="1" maxlength="4000" data-i18n-ph="type_msg" aria-label="Message"></textarea>
+      <button class="send" id="btnSend" aria-label="Send"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </section>
+
+  <!-- Screen 5: Expired / closed -->
+  <section id="v-expired" class="view center">
+    <svg class="lg big"><use href="#logo"/></svg>
+    <h2 id="endTitle"></h2>
+    <p class="mut" id="endTime"></p>
+    <button class="btn" id="btnNew" data-i18n="new_chat"></button>
+    <p class="note" data-i18n="deletion_note"></p>
+  </section>
+
+  <!-- Errors -->
+  <section id="v-error" class="view center">
+    <svg class="lg big"><use href="#logo"/></svg>
+    <h2 id="errText"></h2>
+    <button class="btn" id="btnHome" data-i18n="home"></button>
+  </section>
+</main>
+<div id="toast" role="status"></div>
+
+<script type="module">
+/* ============================================================
+   XChat – Phase 1 (MVP): real-time text chat, two people,
+   server-enforced expiry. NOT end-to-end encrypted yet.
+   ============================================================ */
+
+// >>> Paste your Firebase web-app config here (see guide.html → Backend setup)
+const FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  appId: ""
+};
+const FB_VERSION = "10.14.1";
+const INVITE_VALID_MS = 60 * 60 * 1000; // must match the database rules
+
+/* ---------------- translations ---------------- */
+const T = {
+  en: {
+    tagline: "XChat – Private Conversations. No Footprints.",
+    welcome_desc: "Two people. One private conversation. No account, no history – it disappears when the time runs out.",
+    create_btn: "Create Private Chat",
+    join_hint: "Have an invitation? Paste the link you received on WhatsApp, or simply open it.",
+    paste_ph: "Paste invitation link",
+    join_go: "Join",
+    notice_p1: "Messages are protected in transit by HTTPS. End-to-end encryption is not enabled yet, so do not share highly sensitive information.",
+    install: "Install app",
+    choose_duration: "Choose session length",
+    min_unit: "min", max: "Maximum",
+    duration_note: "The timer starts when the second person joins. It cannot be extended.",
+    create_room: "Create Room",
+    home: "Home",
+    invite_title: "Your private invitation",
+    invite_desc: "Send this link only to the person you want to talk with. It works for exactly one person.",
+    copy: "Copy Link", copied: "Link copied",
+    wa: "Share via WhatsApp",
+    wa_msg: "Join my private XChat conversation:",
+    waiting: "Waiting for the other person to join…",
+    invite_meta: "Created {t}. Valid for 60 minutes.",
+    close_room: "Close room",
+    confirm_tap: "Tap again to confirm",
+    join_title: "You've been invited",
+    join_desc: "A private conversation for two people. The {n}-minute timer starts as soon as you join.",
+    r_len: "Session length", r_created: "Room created",
+    join_conv: "Join Conversation",
+    type_msg: "Type a message",
+    close_chat: "Close Chat",
+    time_left: "Time left",
+    chat_hint: "Say hello. Messages disappear when the session ends.",
+    offline: "Reconnecting…",
+    i_created: "Room created", i_joined: "Second person joined", i_started: "Session started", i_ends: "Session ends", i_tz: "Time zone", i_len: "Session length",
+    minutes: "{n} minutes",
+    expired: "This private session has expired.",
+    closed: "This private session was closed.",
+    invite_expired: "This invitation has expired.",
+    ended_at: "Session ended",
+    new_chat: "Create New Chat",
+    deletion_note: "Messages are deleted from the server when a session ends. XChat cannot remove screenshots, recordings or copies made on a device.",
+    err_invalid: "This invitation is not valid.",
+    err_full: "This conversation already has two participants.",
+    err_expired: "This invitation or session has expired.",
+    err_closed: "This conversation was closed.",
+    err_generic: "Something went wrong. Please try again.",
+    err_send: "Message could not be sent. The session may have ended.",
+    err_link: "That doesn't look like an XChat invitation link.",
+    demo_bar: "LOCAL DEMO – same browser only, no server",
+    p2p_bar: "DIRECT MODE – the creator must keep this page open",
+    err_host: "The creator is offline. Ask them to open XChat and keep it open, then try again."
+  },
+  fa: {
+    tagline: "XChat – گفتگوهای خصوصی. بدون ردپا.",
+    welcome_desc: "دو نفر. یک گفتگوی خصوصی. بدون حساب کاربری و بدون تاریخچه – وقتی زمان تمام شود، گفتگو ناپدید می‌شود.",
+    create_btn: "ایجاد گفتگوی خصوصی",
+    join_hint: "دعوت‌نامه دارید؟ لینکی را که از طریق واتساپ گرفته‌اید اینجا بگذارید یا همان را باز کنید.",
+    paste_ph: "لینک دعوت را اینجا بگذارید",
+    join_go: "پیوستن",
+    notice_p1: "پیام‌ها هنگام انتقال با HTTPS محافظت می‌شوند. رمزنگاری سرتاسری (End-to-End) هنوز فعال نشده است؛ پس معلومات بسیار حساس را نفرستید.",
+    install: "نصب اپلیکیشن",
+    choose_duration: "مدت گفتگو را انتخاب کنید",
+    min_unit: "دقیقه", max: "حداکثر",
+    duration_note: "وقت‌شمار زمانی شروع می‌شود که نفر دوم بپیوندد. تمدید ممکن نیست.",
+    create_room: "ایجاد اتاق",
+    home: "صفحهٔ اصلی",
+    invite_title: "دعوت‌نامهٔ خصوصی شما",
+    invite_desc: "این لینک را فقط برای کسی بفرستید که می‌خواهید با او گفتگو کنید. این لینک تنها برای یک نفر کار می‌کند.",
+    copy: "کاپی کردن لینک", copied: "لینک کاپی شد",
+    wa: "ارسال از طریق واتساپ",
+    wa_msg: "به گفتگوی خصوصی من در XChat بپیوندید:",
+    waiting: "در انتظار پیوستن نفر دوم…",
+    invite_meta: "ایجاد شد: {t}. ۶۰ دقیقه اعتبار دارد.",
+    close_room: "بستن اتاق",
+    confirm_tap: "برای تأیید دوباره لمس کنید",
+    join_title: "شما دعوت شده‌اید",
+    join_desc: "یک گفتگوی خصوصی برای دو نفر. وقت‌شمار {n} دقیقه‌ای به‌مجرد پیوستن شما شروع می‌شود.",
+    r_len: "مدت گفتگو", r_created: "زمان ایجاد اتاق",
+    join_conv: "پیوستن به گفتگو",
+    type_msg: "پیام بنویسید",
+    close_chat: "بستن گفتگو",
+    time_left: "وقت باقی‌مانده",
+    chat_hint: "سلام کنید. پیام‌ها با ختم گفتگو ناپدید می‌شوند.",
+    offline: "در حال وصل شدن دوباره…",
+    i_created: "زمان ایجاد اتاق", i_joined: "زمان پیوستن نفر دوم", i_started: "آغاز گفتگو", i_ends: "ختم گفتگو", i_tz: "منطقهٔ زمانی", i_len: "مدت گفتگو",
+    minutes: "{n} دقیقه",
+    expired: "وقت این گفتگوی خصوصی تمام شد.",
+    closed: "این گفتگوی خصوصی بسته شد.",
+    invite_expired: "اعتبار این دعوت‌نامه ختم شده است.",
+    ended_at: "زمان پایان",
+    new_chat: "ایجاد گفتگوی جدید",
+    deletion_note: "با ختم گفتگو، پیام‌ها از سرور پاک می‌شوند. XChat نمی‌تواند عکس‌های صفحه، ویدیوهای ضبط‌شده یا نسخه‌هایی را که در دستگاه‌ها ذخیره شده‌اند حذف کند.",
+    err_invalid: "این دعوت‌نامه معتبر نیست.",
+    err_full: "در این گفتگو از قبل دو نفر حضور دارند.",
+    err_expired: "اعتبار این دعوت‌نامه یا گفتگو ختم شده است.",
+    err_closed: "این گفتگو بسته شده است.",
+    err_generic: "مشکلی پیش آمد. لطفاً دوباره تلاش کنید.",
+    err_send: "پیام فرستاده نشد. شاید گفتگو ختم شده باشد.",
+    err_link: "این لینک، دعوت‌نامهٔ XChat به نظر نمی‌رسد.",
+    demo_bar: "نسخهٔ آزمایشی محلی – فقط در همین مرورگر، بدون سرور",
+    p2p_bar: "حالت مستقیم – سازنده باید این صفحه را باز نگه دارد",
+    err_host: "سازندهٔ گفتگو آنلاین نیست. از او بخواهید XChat را باز کند و باز نگه دارد، سپس دوباره تلاش کنید."
+  }
+};
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+let lang = "en";
+try { lang = localStorage.getItem("xchat.lang") === "fa" ? "fa" : "en"; } catch {}
+const t = (k, v = {}) => { let s = T[lang][k] ?? T.en[k] ?? k; for (const x in v) s = s.replace("{" + x + "}", v[x]); return s; };
+const loc = () => lang === "fa" ? "fa-AF-u-ca-gregory" : "en";
+const fmtTime = ms => new Intl.DateTimeFormat(loc(), { hour: "2-digit", minute: "2-digit" }).format(ms);
+const fmtFull = ms => new Intl.DateTimeFormat(loc(), { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(ms);
+const tzName = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+const num = n => new Intl.NumberFormat(loc()).format(n);
+function toast(msg) { const el = $("#toast"); el.textContent = msg; el.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove("on"), 2800); }
+function randomId() { // 128-bit CSPRNG token, hex (32 chars)
+  const b = new Uint8Array(16); crypto.getRandomValues(b);
+  return Array.from(b, x => x.toString(16).padStart(2, "0")).join("");
+}
+
+/* ---------------- state ---------------- */
+let duration = 10;
+let room = null;      // {id, uid, meta, ended, chat:{...}}
+let routeGen = 0;
+let endInfo = null;   // {kind, ms}
+let errKey = "err_generic";
+let offset = 0, offsetReady = Promise.resolve();
+let deferredInstall = null;
+let renderers = [];
+
+/* ---------------- i18n ---------------- */
+function setLang(l) {
+  lang = l;
+  try { localStorage.setItem("xchat.lang", l); } catch {}
+  document.documentElement.lang = l === "fa" ? "fa-AF" : "en";
+  document.documentElement.dir = l === "fa" ? "rtl" : "ltr";
+  $$("[data-i18n]").forEach(e => e.textContent = t(e.dataset.i18n));
+  $$("[data-i18n-ph]").forEach(e => e.placeholder = t(e.dataset.i18nPh));
+  $$(".seglang button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === l));
+  renderers.forEach(f => f());
+}
+$$(".seglang button").forEach(b => b.addEventListener("click", () => setLang(b.dataset.lang)));
+
+function show(name) {
+  $$(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + name));
+  document.body.dataset.view = name;
+  window.scrollTo(0, 0);
+}
+
+/* ---------------- Firebase ---------------- */
+const CONFIGURED = !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.databaseURL);
+let auth, db, ref, onValue, onChildAdded, onChildChanged, push, update, remove, serverTimestamp, signInAnonymously;
+const now = () => Date.now() + offset; // server-corrected clock
+
+async function loadFirebase() {
+  const base = `https://www.gstatic.com/firebasejs/${FB_VERSION}/`;
+  const [a, au, d] = await Promise.all([import(base + "firebase-app.js"), import(base + "firebase-auth.js"), import(base + "firebase-database.js")]);
+  ({ ref, onValue, onChildAdded, onChildChanged, push, update, remove, serverTimestamp } = d);
+  ({ signInAnonymously } = au);
+  const app = a.initializeApp(FIREBASE_CONFIG);
+  auth = au.getAuth(app); db = d.getDatabase(app);
+  offsetReady = new Promise(res => onValue(ref(db, ".info/serverTimeOffset"), s => { offset = s.val() || 0; res(); }));
+  let offT;
+  onValue(ref(db, ".info/connected"), s => {
+    clearTimeout(offT);
+    if (s.val() === true) $("#offline").hidden = true;
+    else offT = setTimeout(() => { $("#offline").hidden = false; }, 1500);
+  });
+}
+async function getUser() {
+  await auth.authStateReady();
+  if (!auth.currentUser) await signInAnonymously(auth);
+  return auth.currentUser;
+}
+
+
+/* ---------------- LOCAL DEMO MODE ----------------
+   Used only when FIREBASE_CONFIG is empty. Stores rooms in this browser's
+   localStorage and syncs tabs with BroadcastChannel. Each tab is a separate
+   "person". There is NO server: expiry/membership are only checked by this
+   code, so this is for trying the interface, not for real privacy. */
+function loadDemo() {
+  const KEY = "xchat.demo.db"; let mem = {};
+  const rd = () => { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return mem; } };
+  const wr = d => { mem = d; try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} };
+  let uid; try { uid = sessionStorage.getItem("xchat.demo.uid"); if (!uid) { uid = "demo-" + randomId(); sessionStorage.setItem("xchat.demo.uid", uid); } } catch { uid = "demo-" + randomId(); }
+  const bc = "BroadcastChannel" in window ? new BroadcastChannel("xchat-demo") : null;
+  const subs = new Set(); const fire = () => subs.forEach(f => f());
+  if (bc) bc.onmessage = fire;
+  window.addEventListener("storage", e => { if (e.key === KEY) fire(); });
+  const parts = p => p.split("/").filter(Boolean);
+  const get = (o, p) => parts(p).reduce((x, k) => (x == null ? undefined : x[k]), o);
+  const setp = (o, p, v) => { const ks = parts(p), last = ks.pop(); let x = o; for (const k of ks) { if (typeof x[k] !== "object" || x[k] === null) x[k] = {}; x = x[k]; } if (v === null || v === undefined) delete x[last]; else x[last] = v; };
+  const res = v => v && v.__sv ? Date.now() : (v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, res(x)])) : v);
+  const deny = () => { const e = new Error("PERMISSION_DENIED"); e.code = "PERMISSION_DENIED"; throw e; };
+  const check = (d, path, v) => {
+    const ks = parts(path); if (ks[0] !== "rooms") return;
+    const meta = get(d, "rooms/" + ks[1] + "/meta") || {};
+    if (ks[2] === "meta" && ks[3] === "guest") { if (meta.guest || meta.creator === v || meta.closed) deny(); }
+    if (ks[2] === "messages" && ks.length === 4) {
+      const member = meta.creator === uid || meta.guest === uid;
+      if (!member || meta.closed || !meta.joinedAt || Date.now() >= meta.joinedAt + meta.duration * 60000) deny();
+    }
+  };
+  const commit = d => { wr(d); if (bc) bc.postMessage(1); setTimeout(fire, 0); };
+  const snap = (key, v) => ({ key, val: () => (v === undefined ? null : JSON.parse(JSON.stringify(v))) });
+
+  ref = (_db, path = "") => ({ path });
+  serverTimestamp = () => ({ __sv: 1 });
+  update = async (r, obj) => { const d = rd(); for (const [k, v] of Object.entries(obj)) { const full = [r.path, k].filter(Boolean).join("/"); const val = res(v); check(d, full, val); setp(d, full, val); } commit(d); };
+  push = async (r, val) => { const d = rd(); const key = Date.now().toString(36).padStart(9, "0") + randomId().slice(0, 5); const full = r.path + "/" + key; const v = res(val); check(d, full, v); setp(d, full, v); commit(d); return { key }; };
+  remove = async r => { const d = rd(); setp(d, r.path, null); commit(d); };
+  onValue = (r, cb) => {
+    if (r.path === ".info/serverTimeOffset") { setTimeout(() => cb(snap("o", 0)), 0); return () => {}; }
+    if (r.path === ".info/connected") { setTimeout(() => cb(snap("c", true)), 0); return () => {}; }
+    let last; const f = () => { const v = get(rd(), r.path); const j = JSON.stringify(v ?? null); if (j !== last) { last = j; cb(snap(r.path, v)); } };
+    subs.add(f); setTimeout(f, 0); return () => subs.delete(f);
+  };
+  onChildAdded = (r, cb) => {
+    const seen = new Set();
+    const f = () => { const o = get(rd(), r.path) || {}; Object.keys(o).sort().forEach(k => { if (!seen.has(k)) { seen.add(k); cb(snap(k, o[k])); } }); };
+    subs.add(f); setTimeout(f, 0); return () => subs.delete(f);
+  };
+  onChildChanged = () => () => {};
+  signInAnonymously = async () => {};
+  auth = { authStateReady: async () => {}, currentUser: { uid } };
+  db = {}; offsetReady = Promise.resolve();
+  $("#demoBar").hidden = false;
+}
+
+/* ---------------- DIRECT (peer-to-peer) MODE ----------------
+   Used when FIREBASE_CONFIG is empty and the PeerJS script can load.
+   The CREATOR's device acts as the room "server": it enforces two people,
+   the duration and the expiry, using ITS clock. The guest connects directly
+   to it (WebRTC). The creator must keep this page open.
+   Limits: not a hardened server; a modified creator app can break the rules. */
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement("script"); s.src = src; s.onload = res;
+    s.onerror = () => rej(new Error("script blocked")); document.head.appendChild(s);
+    setTimeout(() => rej(new Error("script timeout")), 8000);
+  });
+}
+async function loadP2P() {
+  if (!window.Peer) await loadScript("https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js");
+  if (!window.Peer) throw new Error("PeerJS missing");
+  const SKEY = "xchat.p2p.rooms";
+  let uid; try { uid = localStorage.getItem("xchat.p2p.uid"); if (!uid) { uid = "u" + randomId(); localStorage.setItem("xchat.p2p.uid", uid); } } catch { uid = "u" + randomId(); }
+  let saved = {}; try { saved = JSON.parse(localStorage.getItem(SKEY) || "{}"); } catch {}
+  const store = {}, hostRooms = new Set();
+  for (const id in saved) if (saved[id] && saved[id].meta && saved[id].meta.creator === uid) { store[id] = saved[id]; hostRooms.add(id); }
+  const persist = () => { try { const o = {}; hostRooms.forEach(id => { if (store[id]) o[id] = store[id]; }); localStorage.setItem(SKEY, JSON.stringify(o)); } catch {} };
+  const root = { rooms: store }, subs = new Set(), R = {};
+  const fire = () => subs.forEach(f => f());
+  const parts = p => p.split("/").filter(Boolean);
+  const get = p => parts(p).reduce((x, k) => (x == null ? undefined : x[k]), root);
+  const snap = (key, v) => ({ key, val: () => (v === undefined ? null : JSON.parse(JSON.stringify(v))) });
+  const deny = () => { const e = new Error("PERMISSION_DENIED"); e.code = "PERMISSION_DENIED"; throw e; };
+  const isMember = (m, u) => !!m && (m.creator === u || m.guest === u);
+  const expOf = m => m.joinedAt + m.duration * 60000;
+  const isActive = m => !!m && !m.closed && !!m.joinedAt && Date.now() < expOf(m);
+  const isOver = m => !!m && (!!m.closed || (!!m.joinedAt && Date.now() >= expOf(m)));
+  const same = (a, b) => a.length === b.length && b.every(x => a.includes(x));
+
+  function viewFor(id, u) {
+    const r = store[id]; if (!r) return null;
+    const m = r.meta; if (isMember(m, u)) return r;
+    return { meta: { creator: "x", duration: m.duration, createdAt: m.createdAt, joinedAt: m.joinedAt, closed: m.closed, guest: m.guest ? "x" : undefined } };
+  }
+  function bcast(id) {
+    const r = R[id]; if (!r) return;
+    r.conns.forEach((st, c) => { if (st.uid && c.open) { try { c.send({ t: "state", now: Date.now(), state: viewFor(id, st.uid) }); } catch {} } });
+  }
+  function hostApply(id, op, a, who) {
+    let room = store[id];
+    if (op === "update") {
+      const k = Object.keys(a);
+      if (!room) {
+        if (who !== uid || !same(k, ["meta/creator", "meta/duration", "meta/createdAt"]) || a["meta/creator"] !== who || ![10, 15, 30].includes(a["meta/duration"])) deny();
+        store[id] = { meta: { creator: who, duration: a["meta/duration"], createdAt: Date.now() } }; hostRooms.add(id);
+      } else if (same(k, ["meta/guest", "meta/joinedAt"])) {
+        const m = room.meta;
+        if (m.guest || who === m.creator || m.closed || Date.now() > m.createdAt + INVITE_VALID_MS || a["meta/guest"] !== who) deny();
+        m.guest = who; m.joinedAt = Date.now();
+      } else if (same(k, ["meta/closed"])) {
+        if (!isMember(room.meta, who) || room.meta.closed) deny();
+        room.meta.closed = Date.now();
+      } else deny();
+    } else if (op === "push") {
+      if (!room || !isMember(room.meta, who) || !isActive(room.meta)) deny();
+      if (!a || typeof a.text !== "string" || !a.text || a.text.length > 4000 || a.uid !== who) deny();
+      const key = Date.now().toString(36).padStart(9, "0") + randomId().slice(0, 5);
+      (room.messages = room.messages || {})[key] = { uid: who, text: a.text, ts: Date.now() };
+    } else if (op === "remove") {
+      if (!room || !isOver(room.meta)) deny();
+      delete room.messages;
+    } else deny();
+    persist(); bcast(id); fire();
+  }
+  setInterval(() => { hostRooms.forEach(id => { const r = store[id]; if (r && r.messages && isOver(r.meta)) { delete r.messages; persist(); bcast(id); fire(); } }); }, 1000);
+
+  function startHost(r) {
+    const mk = () => {
+      const peer = r.peer = new Peer(r.id);
+      peer.on("connection", c => {
+        const st = { uid: null, n: 0, w: 0 }; r.conns.set(c, st);
+        c.on("data", d => {
+          if (!d || typeof d !== "object") return;
+          const nowS = Math.floor(Date.now() / 1000); if (st.w !== nowS) { st.w = nowS; st.n = 0; } if (++st.n > 20) return; // rate limit
+          if (d.t === "hello") { st.uid = String(d.uid || "").slice(0, 80); if (st.uid) c.send({ t: "state", now: Date.now(), state: viewFor(r.id, st.uid) }); }
+          else if (d.t === "cmd" && st.uid) {
+            try { hostApply(r.id, d.op, d.a, st.uid); c.send({ t: "ack", rid: d.rid, ok: 1 }); }
+            catch (e) { c.send({ t: "ack", rid: d.rid, err: e.code || "ERR" }); }
+          }
+        });
+        c.on("close", () => r.conns.delete(c)); c.on("error", () => r.conns.delete(c));
+      });
+      peer.on("disconnected", () => { try { peer.reconnect(); } catch {} });
+      peer.on("error", e => { if (e.type === "unavailable-id" && (r.tries = (r.tries || 0) + 1) < 20) { try { peer.destroy(); } catch {} setTimeout(mk, 3000); } });
+    };
+    mk();
+  }
+  function startGuest(r) {
+    r.pending = new Map(); r.up = false; r.got = false;
+    const later = ms => { clearTimeout(r.t); r.t = setTimeout(retry, ms); };
+    const retry = () => { try { r.peer && r.peer.destroy(); } catch {} r.up = false; connect(); };
+    const connect = () => {
+      const peer = r.peer = new Peer();
+      peer.on("open", () => {
+        const c = r.conn = peer.connect(r.id, { reliable: true });
+        c.on("open", () => { r.up = true; c.send({ t: "hello", uid }); });
+        c.on("data", d => {
+          if (d.t === "state") { offset = d.now - Date.now(); r.got = true; if (d.state) store[r.id] = d.state; else delete store[r.id]; fire(); }
+          else if (d.t === "ack") { const p = r.pending.get(d.rid); if (p) { r.pending.delete(d.rid); d.ok ? p.res() : p.rej(Object.assign(new Error(d.err), { code: d.err })); } }
+        });
+        c.on("close", () => { r.up = false; later(2000); });
+      });
+      peer.on("error", () => { r.up = false; later(3000); });
+    };
+    connect();
+  }
+  function ensure(id) {
+    if (R[id]) return R[id];
+    const r = R[id] = { id, conns: new Map() };
+    hostRooms.has(id) ? startHost(r) : startGuest(r);
+    return r;
+  }
+  const cmd = (r, op, a) => new Promise((res, rej) => {
+    if (!r.up || !r.conn || !r.conn.open) return rej(Object.assign(new Error("offline"), { code: "HOST_OFFLINE" }));
+    const rid = randomId().slice(0, 8); r.pending.set(rid, { res, rej }); r.conn.send({ t: "cmd", rid, op, a });
+    setTimeout(() => { if (r.pending.delete(rid)) rej(new Error("timeout")); }, 8000);
+  });
+  const roomOf = p => parts(p)[1];
+
+  ref = (_d, path = "") => ({ path });
+  serverTimestamp = () => ({ __sv: 1 });
+  update = async (r, obj) => {
+    const ks = Object.keys(obj), id = roomOf(ks[0]), pre = "rooms/" + id + "/", a = {};
+    ks.forEach(k => { if (!k.startsWith(pre)) deny(); a[k.slice(pre.length)] = obj[k]; });
+    if (!store[id] && a["meta/creator"]) hostRooms.add(id);
+    const rm = ensure(id);
+    if (hostRooms.has(id)) return hostApply(id, "update", a, uid);
+    return cmd(rm, "update", a);
+  };
+  push = async (r, val) => {
+    const id = roomOf(r.path), rm = ensure(id);
+    if (hostRooms.has(id)) { hostApply(id, "push", val, uid); return { key: "" }; }
+    await cmd(rm, "push", { uid: val.uid, text: val.text }); return { key: "" };
+  };
+  remove = async r => { const id = roomOf(r.path); if (hostRooms.has(id)) hostApply(id, "remove", null, uid); };
+  const ready = id => hostRooms.has(id) || R[id].got;
+  onValue = (r, cb, errcb) => {
+    if (r.path === ".info/serverTimeOffset") { setTimeout(() => cb(snap("o", 0)), 0); return () => {}; }
+    if (r.path === ".info/connected") { setTimeout(() => cb(snap("c", true)), 0); return () => {}; }
+    const id = roomOf(r.path); ensure(id); let last, dead = false;
+    const f = () => { if (!ready(id)) return; const v = get(r.path), j = JSON.stringify(v ?? null); if (j !== last) { last = j; cb(snap(r.path, v)); } };
+    subs.add(f); setTimeout(f, 0);
+    setTimeout(() => { if (!dead && !ready(id) && errcb) errcb({ code: "HOST_OFFLINE" }); }, 12000);
+    return () => { dead = true; subs.delete(f); };
+  };
+  onChildAdded = (r, cb) => {
+    const id = roomOf(r.path); ensure(id); const seen = new Set();
+    const f = () => { if (!ready(id)) return; const o = get(r.path) || {}; Object.keys(o).sort().forEach(k => { if (!seen.has(k)) { seen.add(k); cb(snap(k, o[k])); } }); };
+    subs.add(f); setTimeout(f, 0); return () => subs.delete(f);
+  };
+  onChildChanged = () => () => {};
+  signInAnonymously = async () => {};
+  auth = { authStateReady: async () => {}, currentUser: { uid } };
+  db = {}; offsetReady = Promise.resolve();
+  const bar = $("#demoBar"); bar.dataset.i18n = "p2p_bar"; bar.textContent = t("p2p_bar"); bar.hidden = false;
+}
+
+/* ---------------- routing ---------------- */
+function teardown() {
+  if (room) {
+    room.ended = true;
+    room.unsubMeta && room.unsubMeta();
+    stopChat();
+  }
+  room = null;
+}
+async function route() {
+  teardown();
+  const gen = ++routeGen;
+  const h = location.hash || "";
+  let m;
+  if ((m = h.match(/^#(?:j|r)-([A-Za-z0-9]{16,32})$/))) return openRoom(m[1], gen);
+  if (h === "#new") { show("create"); $("#c-pick").hidden = false; $("#c-invite").hidden = true; return; }
+  show("welcome");
+}
+function showError(key) { errKey = key; show("error"); renderError(); }
+
+async function openRoom(id, gen) {
+  show("loading");
+  let user;
+  try { user = await getUser(); await offsetReady; } catch (e) { console.error(e); return showError("err_generic"); }
+  if (gen !== routeGen) return;
+  room = { id, uid: user.uid, meta: null, ended: false, chat: null, wasMember: false };
+  room.unsubMeta = onValue(ref(db, `rooms/${id}/meta`), snap => {
+    if (gen !== routeGen || !room || room.ended) return;
+    room.meta = snap.val();
+    evaluate();
+  }, err => { console.error(err); showError(err && err.code === "HOST_OFFLINE" ? "err_host" : "err_generic"); });
+}
+
+function statusOf(m) {
+  if (!m) return "none";
+  if (m.closed) return "closed";
+  if (m.joinedAt) return now() >= m.joinedAt + m.duration * 60000 ? "expired" : "active";
+  return now() > m.createdAt + INVITE_VALID_MS ? "lapsed" : "waiting";
+}
+const expiryOf = m => m.joinedAt + m.duration * 60000;
+
+function evaluate() {
+  const m = room.meta, uid = room.uid;
+  if (!m) return showError("err_invalid");
+  const role = m.creator === uid ? "creator" : m.guest === uid ? "guest" : null;
+  const st = statusOf(m);
+  if (role) {
+    room.wasMember = true;
+    if (st === "closed") return endSession("closed", m.closed);
+    if (st === "expired") return endSession("expired", expiryOf(m));
+    if (st === "lapsed") return endSession("invite", m.createdAt + INVITE_VALID_MS);
+    if (st === "waiting") return showInvite();
+    return startChat();
+  }
+  if (st === "closed") return showError("err_closed");
+  if (st === "expired" || st === "lapsed") return showError("err_expired");
+  if (st === "active" || m.guest) return showError("err_full");
+  show("join"); renderJoin();
+}
+
+/* ---------------- create / invite ---------------- */
+function buildOpts() {
+  const box = $("#opts"); box.innerHTML = "";
+  [10, 15, 30].forEach(d => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.dataset.d = d; b.setAttribute("role", "radio");
+    b.innerHTML = `<b></b><span></span>${d === 30 ? "<em></em>" : ""}`;
+    b.addEventListener("click", () => { duration = d; renderOpts(); });
+    box.appendChild(b);
+  });
+}
+function renderOpts() {
+  $$("#opts .opt").forEach(b => {
+    const d = +b.dataset.d;
+    b.setAttribute("aria-checked", d === duration);
+    b.querySelector("b").textContent = num(d);
+    b.querySelector("span").textContent = t("min_unit");
+    const em = b.querySelector("em"); if (em) em.textContent = t("max");
+  });
+}
+$("#btnCreate").addEventListener("click", async e => {
+  const btn = e.currentTarget; btn.disabled = true;
+  try {
+    const u = await getUser(); const id = randomId();
+    await update(ref(db), {
+      [`rooms/${id}/meta/creator`]: u.uid,
+      [`rooms/${id}/meta/duration`]: duration,
+      [`rooms/${id}/meta/createdAt`]: serverTimestamp()
+    });
+    location.hash = "#r-" + id;
+  } catch (err) { console.error(err); toast(t("err_generic")); }
+  btn.disabled = false;
+});
+const inviteUrl = () => location.origin + location.pathname + "#j-" + room.id;
+function showInvite() {
+  show("create");
+  $("#c-pick").hidden = true; $("#c-invite").hidden = false;
+  $("#inviteLink").value = inviteUrl();
+  renderInvite();
+}
+function renderInvite() {
+  if (room && room.meta) {
+    $("#inviteMeta").textContent = t("invite_meta", { t: fmtFull(room.meta.createdAt) });
+    $("#btnWa").href = "https://wa.me/?text=" + encodeURIComponent(t("wa_msg") + "\n" + inviteUrl());
+  }
+}
+async function copyText(s) {
+  try { await navigator.clipboard.writeText(s); }
+  catch { const i = $("#inviteLink"); i.select(); document.execCommand("copy"); }
+  toast(t("copied"));
+}
+$("#btnCopy").addEventListener("click", () => room && copyText(inviteUrl()));
+// WhatsApp is the only sharing destination (a plain link, no Web Share sheet on purpose).
+let armed = null;
+async function closeRoom(e) {
+  if (!room) return;
+  const b = e.currentTarget;
+  if (armed !== b) { // two-step confirm built into the page (dialogs are blocked in some viewers)
+    armed = b; b.textContent = t("confirm_tap");
+    setTimeout(() => { if (armed === b) { armed = null; b.textContent = t(b.dataset.i18n); } }, 4000);
+    return;
+  }
+  armed = null; b.textContent = t(b.dataset.i18n);
+  try { await update(ref(db), { [`rooms/${room.id}/meta/closed`]: serverTimestamp() }); }
+  catch (e) { console.error(e); toast(t("err_generic")); }
+}
+$("#btnCloseRoom").addEventListener("click", closeRoom);
+$("#btnClose").addEventListener("click", closeRoom);
+
+/* ---------------- join ---------------- */
+function renderJoin() {
+  if (!room || !room.meta || !$("#v-join").classList.contains("on")) return;
+  const m = room.meta;
+  $("#joinDesc").textContent = t("join_desc", { n: num(m.duration) });
+  $("#joinRows").innerHTML = "";
+  [[t("r_len"), t("minutes", { n: num(m.duration) })], [t("r_created"), fmtFull(m.createdAt)]].forEach(([a, b]) => {
+    const d = document.createElement("div");
+    d.innerHTML = "<span></span><span></span>"; d.children[0].textContent = a; d.children[1].textContent = b;
+    $("#joinRows").appendChild(d);
+  });
+}
+$("#btnJoin").addEventListener("click", async e => {
+  if (!room) return;
+  const btn = e.currentTarget; btn.disabled = true;
+  try {
+    await update(ref(db), {
+      [`rooms/${room.id}/meta/guest`]: room.uid,
+      [`rooms/${room.id}/meta/joinedAt`]: serverTimestamp()
+    });
+    history.replaceState(null, "", "#r-" + room.id);
+  } catch (err) { console.error(err); showError("err_full"); }
+  btn.disabled = false;
+});
+$("#joinForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = $("#joinInput").value.trim();
+  const m = v.match(/#j-([A-Za-z0-9]{16,32})/) || v.match(/^([A-Za-z0-9]{32})$/);
+  if (!m) return toast(t("err_link"));
+  location.hash = "#j-" + m[1];
+});
+
+/* ---------------- chat ---------------- */
+const msgEls = new Map();
+function startChat() {
+  if (room.chat) return;
+  const m = room.meta;
+  show("chat");
+  const exp = expiryOf(m);
+  const mref = ref(db, `rooms/${room.id}/messages`);
+  room.chat = { exp, mref, un: [], tick: null };
+  room.chat.un.push(onChildAdded(mref, s => addMsg(s.key, s.val()), e => console.warn("messages listener", e.code)));
+  room.chat.un.push(onChildChanged(mref, s => addMsg(s.key, s.val())));
+  room.chat.tick = setInterval(tick, 250);
+  tick(); renderInfo();
+  setTimeout(() => $("#msgInput").focus(), 100);
+}
+function tick() {
+  if (!room || !room.chat) return;
+  const left = room.chat.exp - now();
+  if (left <= 0) return endSession("expired", room.chat.exp);
+  const s = Math.ceil(left / 1000);
+  $("#clock").textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  $("#timer").classList.toggle("low", s <= 60);
+}
+function stopChat() {
+  if (room && room.chat) {
+    clearInterval(room.chat.tick);
+    room.chat.un.forEach(u => { try { u(); } catch {} });
+    room.chat = null;
+  }
+  msgEls.forEach(el => el.remove()); msgEls.clear();
+  const h = $("#chatHint"); if (h) h.hidden = false;
+  const i = $("#msgInput"); if (i) { i.value = ""; i.style.height = "auto"; }
+}
+function addMsg(key, v) {
+  if (!room || !v || typeof v.text !== "string") return;
+  let el = msgEls.get(key);
+  const box = $("#msgs");
+  const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  if (!el) {
+    el = document.createElement("div");
+    el.className = "msg " + (v.uid === room.uid ? "mine" : "theirs");
+    el.innerHTML = '<div class="tx"></div><time></time>';
+    el.querySelector(".tx").textContent = v.text; // textContent only: no HTML injection
+    box.appendChild(el); msgEls.set(key, el);
+    $("#chatHint").hidden = true;
+  }
+  const tm = el.querySelector("time");
+  if (typeof v.ts === "number") { tm.dataset.ts = v.ts; tm.textContent = fmtTime(v.ts); tm.title = fmtFull(v.ts); }
+  if (nearBottom || v.uid === room.uid) box.scrollTop = box.scrollHeight;
+}
+function renderMsgTimes() {
+  $$("#msgs time").forEach(tm => { if (tm.dataset.ts) { tm.textContent = fmtTime(+tm.dataset.ts); tm.title = fmtFull(+tm.dataset.ts); } });
+}
+let lastSend = 0;
+async function send() {
+  const inp = $("#msgInput"); const txt = inp.value.trim();
+  if (!txt || !room || !room.chat) return;
+  if (Date.now() - lastSend < 400) return; // basic client-side throttle
+  lastSend = Date.now();
+  inp.value = ""; inp.style.height = "auto";
+  try { await push(room.chat.mref, { uid: room.uid, text: txt, ts: serverTimestamp() }); }
+  catch (e) { console.warn(e); toast(t("err_send")); inp.value = txt; }
+}
+$("#btnSend").addEventListener("click", send);
+$("#msgInput").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); } });
+$("#msgInput").addEventListener("input", e => { const i = e.target; i.style.height = "auto"; i.style.height = Math.min(i.scrollHeight, 140) + "px"; });
+$("#btnInfo").addEventListener("click", () => {
+  const info = $("#info"); info.hidden = !info.hidden;
+  $("#btnInfo").setAttribute("aria-expanded", !info.hidden);
+});
+function renderInfo() {
+  if (!room || !room.meta || !room.meta.joinedAt) return;
+  const m = room.meta;
+  const rows = [
+    [t("i_len"), t("minutes", { n: num(m.duration) })],
+    [t("i_created"), fmtFull(m.createdAt)],
+    [t("i_joined"), fmtFull(m.joinedAt)],
+    [t("i_started"), fmtFull(m.joinedAt)],
+    [t("i_ends"), fmtFull(expiryOf(m))],
+    [t("i_tz"), tzName()]
+  ];
+  const box = $("#infoRows"); box.innerHTML = "";
+  rows.forEach(([a, b]) => { const d = document.createElement("div"); d.innerHTML = "<span></span><span></span>"; d.children[0].textContent = a; d.children[1].textContent = b; box.appendChild(d); });
+}
+
+/* ---------------- end of session ---------------- */
+function endSession(kind, ms) {
+  if (!room || room.ended) return;
+  const id = room.id;
+  room.ended = true;
+  room.unsubMeta && room.unsubMeta();
+  stopChat();
+  // Best-effort secure deletion: remove every message from the server.
+  // (Database rules only allow this once the session is over.)
+  remove(ref(db, `rooms/${id}/messages`)).catch(() => {});
+  endInfo = { kind, ms: ms || now() };
+  show("expired"); renderExpired();
+}
+function renderExpired() {
+  if (!endInfo) return;
+  $("#endTitle").textContent = endInfo.kind === "closed" ? t("closed") : endInfo.kind === "invite" ? t("invite_expired") : t("expired");
+  $("#endTime").textContent = t("ended_at") + ": " + fmtFull(endInfo.ms);
+}
+function renderError() { $("#errText").textContent = t(errKey); }
+
+/* ---------------- buttons ---------------- */
+$("#goCreate").addEventListener("click", () => { location.hash = "#new"; });
+["#btnBack1", "#btnBack2", "#btnHome", "#btnNew"].forEach(s => $(s).addEventListener("click", () => {
+  if (s === "#btnNew") { if (location.hash === "#new") route(); else location.hash = "#new"; }
+  else { if (!location.hash) route(); else location.hash = ""; }
+}));
+
+/* ---------------- PWA (installable on Android) ---------------- */
+function setupPWA() {
+  try {
+    const icon = s => {
+      const c = document.createElement("canvas"); c.width = c.height = s; const x = c.getContext("2d");
+      x.fillStyle = "#000"; x.fillRect(0, 0, s, s);
+      const p = s * .17, w = s - 2 * p, h = w * .76;
+      x.fillStyle = "#fff"; x.beginPath(); x.roundRect ? x.roundRect(p, p, w, h, s * .14) : x.rect(p, p, w, h); x.fill();
+      x.beginPath(); x.moveTo(p + w * .12, p + h - 2); x.lineTo(p + w * .12, p + h + s * .13); x.lineTo(p + w * .36, p + h - 2); x.fill();
+      const cx = s / 2, cy = p + h / 2, d = s * .12;
+      x.strokeStyle = "#000"; x.lineWidth = s * .07; x.lineCap = "round";
+      x.beginPath(); x.moveTo(cx - d, cy - d); x.lineTo(cx + d, cy + d); x.moveTo(cx + d, cy - d); x.lineTo(cx - d, cy + d); x.stroke();
+      return c.toDataURL("image/png");
+    };
+    const i192 = icon(192), i512 = icon(512);
+    const base = location.origin + location.pathname;
+    const man = { name: "XChat", short_name: "XChat", description: "XChat – Private Conversations. No Footprints.", start_url: base, scope: base.replace(/[^/]*$/, ""), display: "standalone", background_color: "#000000", theme_color: "#000000", icons: [{ src: i192, sizes: "192x192", type: "image/png", purpose: "any" }, { src: i512, sizes: "512x512", type: "image/png", purpose: "any" }] };
+    const l = document.createElement("link"); l.rel = "manifest"; l.href = "data:application/manifest+json," + encodeURIComponent(JSON.stringify(man)); document.head.appendChild(l);
+    const a = document.createElement("link"); a.rel = "apple-touch-icon"; a.href = i192; document.head.appendChild(a);
+  } catch (e) { console.warn("PWA setup skipped", e); }
+}
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredInstall = e; $("#btnInstall").hidden = false; });
+$("#btnInstall").addEventListener("click", async () => { if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; $("#btnInstall").hidden = true; } });
+
+/* ---------------- boot ---------------- */
+document.body.dataset.view = "loading";
+renderers = [renderOpts, renderInvite, renderJoin, renderInfo, renderExpired, renderError, renderMsgTimes];
+buildOpts();
+setLang(lang);
+setupPWA();
+(async () => {
+  try { if (CONFIGURED) await loadFirebase(); else { try { await loadP2P(); } catch (e) { console.warn("Direct mode unavailable, using local demo", e); loadDemo(); } } } catch (e) { console.error(e); return showError("err_generic"); }
+  window.addEventListener("hashchange", route);
+  route();
+})();
+</script>
+</body>
+</html>
